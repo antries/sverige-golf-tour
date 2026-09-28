@@ -1,0 +1,372 @@
+{
+  "trip": {
+    "name": "Vidbynäs 2026",
+    "dates": "26.–27.9.2026",
+    "location": "Vidbynäs Golf, Ruotsi",
+    "courses": [
+      "South Course",
+      "North Course"
+    ]
+  },
+  "players": [
+    "Antti Ikonen",
+    "Miikka Pesola",
+    "Antti Ryynänen"
+  ],
+  "net": [
+    {
+      "name": "Antti Ikonen",
+      "score": 150
+    },
+    {
+      "name": "Miikka Pesola",
+      "score": 160
+    },
+    {
+      "name": "Antti Ryynänen",
+      "score": 161
+    }
+  ],
+  "gross": [
+    {
+      "name": "Miikka Pesola",
+      "score": 172
+    },
+    {
+      "name": "Antti Ikonen",
+      "score": 180
+    },
+    {
+      "name": "Antti Ryynänen",
+      "score": 186
+    }
+  ],
+  "side": [
+    {
+      "name": "Nassau",
+      "winner": "Miikka Pesola",
+      "score": "31,5 p"
+    },
+    {
+      "name": "Bingo–Bango–Bongo",
+      "winner": "Miikka Pesola",
+      "score": "20 p"
+    }
+  ],
+  "rounds": [
+    {
+      "name": "South Course",
+      "par": 72,
+      "scores": {
+        "Antti Ikonen": [
+          6,
+          7,
+          6,
+          6,
+          4,
+          6,
+          5,
+          4,
+          7,
+          4,
+          6,
+          4,
+          4,
+          6,
+          5,
+          5,
+          4,
+          5
+        ],
+        "Miikka Pesola": [
+          6,
+          3,
+          5,
+          4,
+          3,
+          4,
+          3,
+          5,
+          6,
+          5,
+          5,
+          7,
+          5,
+          5,
+          4,
+          4,
+          3,
+          7
+        ],
+        "Antti Ryynänen": [
+          7,
+          5,
+          6,
+          6,
+          5,
+          5,
+          4,
+          6,
+          6,
+          5,
+          6,
+          4,
+          4,
+          4,
+          5,
+          6,
+          6,
+          7
+        ]
+      }
+    },
+    {
+      "name": "North Course",
+      "par": 70,
+      "scores": {
+        "Antti Ikonen": [
+          5,
+          6,
+          5,
+          4,
+          5,
+          5,
+          5,
+          4,
+          5,
+          6,
+          4,
+          5,
+          4,
+          5,
+          4,
+          6,
+          3,
+          5
+        ],
+        "Miikka Pesola": [
+          7,
+          7,
+          6,
+          4,
+          7,
+          4,
+          3,
+          4,
+          4,
+          7,
+          3,
+          6,
+          6,
+          4,
+          3,
+          5,
+          3,
+          5
+        ],
+        "Antti Ryynänen": [
+          6,
+          4,
+          2,
+          7,
+          6,
+          7,
+          5,
+          4,
+          4,
+          6,
+          7,
+          5,
+          5,
+          5,
+          3,
+          5,
+          4,
+          5
+        ]
+      }
+    }
+  ],
+  "photos": [
+    {
+      "src": "/photos/vidbynas-2026/001.jpg",
+      "original": "15a9bd61-57f5-410e-96bd-96d7502288e9.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/002.jpg",
+      "original": "1baf51fe-7b38-40b9-8b95-1c27b6699108.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/003.jpg",
+      "original": "2c54b2c0-385a-40bc-b4e0-fccfad8e731d.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/004.jpg",
+      "original": "34044ffe-63a7-4f7f-b4d5-2bdcf42da214.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/005.jpg",
+      "original": "493d34a2-fb32-49c3-9371-7f82779454cf.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/006.jpg",
+      "original": "720a0a8a-11c0-4415-aa3c-e5bfe3ebe2fd.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/007.jpg",
+      "original": "73b085ce-ef48-4bee-bebf-f64300f06984.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/008.jpg",
+      "original": "74b8d47a-8a0b-4ca3-b2dd-483448c05d29.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/009.jpg",
+      "original": "759b1da9-e32a-48e0-ba56-026c86bc1a61.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/010.jpg",
+      "original": "8b4e91fc-341a-468d-8102-18beb1d8387a.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/011.jpg",
+      "original": "90507f02-56c5-4829-b38a-83451b2fe1d7.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/012.jpg",
+      "original": "9c43d8a7-8c18-4368-9d0e-b4e13fc39acf.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/013.jpg",
+      "original": "9c85b61b-0df6-4009-b9f4-7279e3ef462e.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/014.jpg",
+      "original": "IMG_3487.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/015.jpg",
+      "original": "IMG_3488.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/016.jpg",
+      "original": "IMG_3490.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/017.jpg",
+      "original": "IMG_3491.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/018.jpg",
+      "original": "IMG_3498.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/019.jpg",
+      "original": "IMG_3499.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/020.jpg",
+      "original": "IMG_3501.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/021.jpg",
+      "original": "IMG_3503.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/022.jpg",
+      "original": "IMG_3508.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/023.jpg",
+      "original": "IMG_3512.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/024.jpg",
+      "original": "IMG_3513.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/025.jpg",
+      "original": "IMG_3514.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/026.jpg",
+      "original": "IMG_3515.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/027.jpg",
+      "original": "IMG_3516.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/028.jpg",
+      "original": "IMG_3517.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/029.jpg",
+      "original": "IMG_3518.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/030.jpg",
+      "original": "IMG_3520.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/031.jpg",
+      "original": "IMG_3521.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/032.jpg",
+      "original": "IMG_3525.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/033.jpg",
+      "original": "IMG_3529.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/034.jpg",
+      "original": "IMG_3531.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/035.jpg",
+      "original": "IMG_3534.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/036.jpg",
+      "original": "IMG_3540.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/037.jpg",
+      "original": "IMG_3543.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/038.jpg",
+      "original": "IMG_3545.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/039.jpg",
+      "original": "IMG_3546.JPEG"
+    },
+    {
+      "src": "/photos/vidbynas-2026/040.jpg",
+      "original": "bf76590f-b064-451f-93fa-fcbfe0aeb7d4.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/041.jpg",
+      "original": "d2089406-4be5-4ef8-8a3c-a2e3ffbc306c.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/042.jpg",
+      "original": "d8e395a1-c73f-4a63-9b3b-1af192513be7.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/043.jpg",
+      "original": "daeeade8-b978-4676-aa4d-83afd9ac6f55.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/044.jpg",
+      "original": "db29e172-4293-4d28-870b-307e1afa13fd.jpg"
+    },
+    {
+      "src": "/photos/vidbynas-2026/045.jpg",
+      "original": "e91309db-fd9f-4747-a819-29ea414b4f32.jpg"
+    }
+  ]
+}
