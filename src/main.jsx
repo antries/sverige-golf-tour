@@ -1,24 +1,766 @@
-import React,{useEffect,useMemo,useRef,useState}from'react';
-import{createRoot}from'react-dom/client';
-import{Home,Flag,Trophy,Users,Images,MapPin,Calendar,ChevronRight,Upload,Menu,X,ChevronLeft,ChevronRight as Next,Clock,LogIn,LogOut,LoaderCircle,CheckCircle2,AlertCircle,Camera}from'lucide-react';
-import fallback from'./data.json';import{publicPhotoUrl,supabase,supabaseConfigured}from'./supabase';import'./style.css';import'./v3.css';
-const nav=[['Koti',Home],['Matkat',Flag],['Historia',Clock],['Pelaajat',Users],['Galleria',Images]];
-const fmt=d=>d?new Intl.DateTimeFormat('fi-FI').format(new Date(d+'T12:00:00')):'';
-const period=t=>t?.start_date&&t?.end_date?`${fmt(t.start_date)}–${fmt(t.end_date)}`:'';
-function Logo(){return <div className="logo"><div className="swflag"/><div className="logoCore"><small>SVERIGE GOLF TOUR</small><b>SGT</b><em>EST. 2026</em></div></div>}
-function Loading(){return <div className="loading"><LoaderCircle className="spin"/><span>Ladataan...</span></div>}
-function Drawer({open,onClose,setPage,user,isAdmin,onLogin,onLogout}){if(!open)return null;return <div className="drawerWrap" onClick={onClose}><aside className="drawer" onClick={e=>e.stopPropagation()}><button className="close" onClick={onClose}><X/></button><Logo/><h2>Sverige Golf Tour</h2>{nav.map(([n,I])=><button key={n} onClick={()=>{setPage(n);onClose()}}><I/>{n}</button>)}<div className="drawerRule"/>{isAdmin&&<button onClick={()=>{setPage('Ylläpito');onClose()}}><Upload/>Ylläpito</button>}{user?<button onClick={onLogout}><LogOut/>Kirjaudu ulos</button>:<button onClick={()=>{onLogin();onClose()}}><LogIn/>Kirjaudu ylläpitoon</button>}<small>{user?user.email:'Julkinen näkymä'}</small></aside></div>}
-function AuthModal({onClose}){const[email,setEmail]=useState(''),[state,setState]=useState('idle'),[msg,setMsg]=useState('');async function submit(e){e.preventDefault();setState('loading');const redirectTo=window.location.origin;const{error}=await supabase.auth.signInWithOtp({email,options:{emailRedirectTo:redirectTo}});if(error){setState('error');setMsg(error.message)}else{setState('sent')}}return <div className="modalBack" onClick={onClose}><form className="authCard" onSubmit={submit} onClick={e=>e.stopPropagation()}><button type="button" className="modalClose" onClick={onClose}><X/></button><Logo/><h2>Kirjaudu ylläpitoon</h2>{state==='sent'?<div className="authNotice"><CheckCircle2/><b>Taikalinkki lähetetty</b><p>Avaa sähköposti samalla laitteella ja paina kirjautumislinkkiä.</p></div>:<><p>Syötä ylläpitäjän sähköpostiosoite. Salasanaa ei tarvita.</p><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="sähköposti@osoite.fi"/><button className="primaryBtn" disabled={state==='loading'}>{state==='loading'?<LoaderCircle className="spin"/>:<LogIn/>} Lähetä taikalinkki</button>{state==='error'&&<p className="error"><AlertCircle/>{msg}</p>}</>}</form></div>}
-function Results({competitions,results}){const groups=competitions.map(c=>({...c,rows:results.filter(r=>r.competition_id===c.id).sort((a,b)=>(a.position??99)-(b.position??99))}));const main=groups.filter(x=>['Pääkisa NET','Scratch'].includes(x.name)),side=groups.filter(x=>!['Pääkisa NET','Scratch'].includes(x.name));return <><h2>Tulokset</h2><div className="resultGrid">{main.map(g=><section className="panel" key={g.id}><label>{g.name.toUpperCase()}</label>{g.rows.map(r=><div className="row" key={r.id}><strong>{r.position}.</strong><span>{r.players?.display_name}</span><b>{r.score_label||r.score}</b></div>)}</section>)}</div><div className="sidegames">{side.map(g=>{const win=g.rows[0];return <div className="mini" key={g.id}><label>{g.name}</label><b>{win?.players?.display_name||'–'}</b><span>{win?.score_label||win?.score||''}</span></div>})}</div></>}
-function Scorecard({r}){return <details className="score"><summary>{r.name} · par {r.par}</summary>{Object.entries(r.scores).map(([p,s])=><div className="scorePlayer" key={p}><b>{p}</b><div className="holes">{s.map((v,i)=><span key={i}><small>{i+1}</small>{v}</span>)}</div><strong>{s.reduce((a,b)=>a+b,0)}</strong></div>)}</details>}
-function HomePage({setPage,openMenu,trips,history,photos}){const t=trips[0],h=history.find(x=>x.id===t?.id)||history[0];return <><header><button className="menuBtn" onClick={openMenu}><Menu/></button><span>RUOTSI · GOLF · PERINTEET</span></header><section className="hero"><Logo/><h1>SVERIGE<br/>GOLF TOUR</h1><p>Golfia, kilpailua ja yhteisiä matkoja Ruotsissa</p></section><main><label className="eyebrow">VIIMEISIN MATKA</label>{t&&<article className="trip"><i>{t.year}</i><h2>{t.name.replace(String(t.year),'').trim()}</h2><p><MapPin/> {t.location}</p><p><Calendar/> {period(t)}</p><button onClick={()=>setPage('Matkat')}>Avaa matka <ChevronRight/></button></article>}<div className="champs"><article><Trophy/><small>TOUR CHAMPION</small><b>{h?.tour_champion||'–'}</b></article><article><Trophy/><small>SCRATCH CHAMPION</small><b>{h?.scratch_champion||'–'}</b></article></div><section className="next"><small>SEURAAVA MATKA</small><h2>Sverige 2027</h2><p>Kohde julkistetaan myöhemmin</p></section><Gallery preview setPage={setPage} photos={photos}/></main></>}
-function TripDetail({trip,competitions,results,photos}){const tripPhotos=photos.filter(p=>p.trip_id===trip.id);return <main className="inner"><h1>{trip.name}</h1><p className="muted">{trip.location} · {period(trip)}</p>{tripPhotos[0]&&<img className="cover" src={tripPhotos[0].url} alt={trip.name}/>}<Results competitions={competitions.filter(c=>c.trip_id===trip.id)} results={results}/><h2>Matkakertomus</h2><article className="story">{trip.story?.split('\n').filter(Boolean).map((p,i)=><p key={i}>{p}</p>)}</article>{trip.slug==='vidbynas-2026'&&<><h2>Kierrokset</h2>{fallback.rounds.map(r=><Scorecard r={r} key={r.name}/>)}</>}<h2>Kuvat</h2><Gallery photos={tripPhotos}/></main>}
-function Trips({trips,competitions,results,photos,history}){const[selected,setSelected]=useState(null);if(selected)return <><button className="back" onClick={()=>setSelected(null)}><ChevronLeft/>Kaikki matkat</button><TripDetail trip={selected} competitions={competitions} results={results} photos={photos}/></>;return <main className="inner"><h1>Matkat</h1><p className="muted">Kaikki Sverige Golf Tour -matkat, uusin ensin.</p>{trips.map(t=>{const h=history.find(x=>x.id===t.id);const im=photos.find(x=>x.trip_id===t.id);return <article className="tripList" onClick={()=>setSelected(t)} key={t.id}>{im?<img src={im.url}/>:<div className="tripPlaceholder"><Flag/></div>}<div><small>{t.year}</small><h2>{t.name}</h2><p>{period(t)} · {h?.participant_count||0} osallistujaa</p><span>Champion: {h?.tour_champion||'–'}</span></div><ChevronRight/></article>})}</main>}
-function Lightbox({photos,index,setIndex,onClose}){const startX=useRef(null),delta=useRef(0);const prev=()=>setIndex((index-1+photos.length)%photos.length),next=()=>setIndex((index+1)%photos.length);useEffect(()=>{document.body.classList.add('noScroll');const f=e=>{if(e.key==='Escape')onClose();if(e.key==='ArrowRight')next();if(e.key==='ArrowLeft')prev()};addEventListener('keydown',f);return()=>{document.body.classList.remove('noScroll');removeEventListener('keydown',f)}},[index]);return <div className="lightbox" onClick={onClose} onTouchStart={e=>{startX.current=e.touches[0].clientX;delta.current=0}} onTouchMove={e=>delta.current=e.touches[0].clientX-startX.current} onTouchEnd={()=>{if(delta.current>55)prev();if(delta.current<-55)next()}}><button className="lbClose" onClick={onClose}><X/></button><button className="lbPrev" onClick={e=>{e.stopPropagation();prev()}}><ChevronLeft/></button><div className="lbStage" onClick={e=>e.stopPropagation()}><img src={photos[index].url}/></div><button className="lbNext" onClick={e=>{e.stopPropagation();next()}}><Next/></button><div className="lbCount">{index+1} / {photos.length}</div></div>}
-function Gallery({preview=false,setPage,photos=[]}){const[index,setIndex]=useState(null),ps=preview?photos.slice(0,6):photos;return <section className={preview?'galleryBlock':'galleryInside'}><div className="galleryTitle"><h2>{preview?'Viimeisimmät kuvat':'Galleria'}</h2>{preview&&<button className="link" onClick={()=>setPage('Galleria')}>Kaikki kuvat →</button>}</div><div className="gallery">{ps.map((p,i)=><button className="photoBtn" onClick={()=>setIndex(i)} key={p.id||p.url}><img loading="lazy" src={p.url}/></button>)}</div>{index!==null&&<Lightbox photos={ps} index={index} setIndex={setIndex} onClose={()=>setIndex(null)}/>}</section>}
-function GalleryPage({photos,trips,isAdmin,setPage}){const[filter,setFilter]=useState('all');const list=filter==='all'?photos:photos.filter(p=>p.trip_id===filter);return <main className="inner"><div className="galleryTitle"><h1>Galleria</h1>{isAdmin&&<button className="smallGold" onClick={()=>setPage('Ylläpito')}><Upload/>Lisää kuvia</button>}</div><select value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">Kaikki kuvat</option>{trips.map(t=><option value={t.id} key={t.id}>{t.name}</option>)}</select><p className="muted">{list.length} kuvaa</p><Gallery photos={list}/></main>}
-function History({history,participation,championship}){return <main className="inner"><h1>Historia</h1><p className="muted">Matkat, osallistujat ja mestarit vuodesta 2026 alkaen.</p><div className="historyTable"><div className="historyHead"><span>Matka</span><span>Ajankohta</span><span>Osall.</span></div>{history.map(t=><div className="historyRow" key={t.id}><div><b>{t.name}</b><small>Tour: {t.tour_champion}<br/>Scratch: {t.scratch_champion}</small></div><span>{fmt(t.start_date)}–{fmt(t.end_date)}</span><strong>{t.participant_count}</strong></div>)}</div><h2>Osallistumiset</h2>{participation.map((p,i)=><div className="rank" key={p.id}><strong>{i+1}</strong><span>{p.display_name}</span><b>{p.trip_count} matka</b></div>)}<h2>Mestaruusranking</h2><div className="champRank">{championship.map(p=><div key={p.id}><Trophy/><span>{p.display_name}</span><b>{p.all_wins}</b><small>Tour {p.tour_wins} · Scratch {p.scratch_wins} · Päiväpelit {p.side_game_wins}</small></div>)}</div></main>}
-function Players({players,participation,championship}){return <main className="inner"><h1>Pelaajat</h1>{players.map(p=>{const a=participation.find(x=>x.id===p.id),c=championship.find(x=>x.id===p.id);return <article className="player" key={p.id}><div>{p.display_name.split(' ').map(a=>a[0]).join('')}</div><section><b>{p.display_name}</b><span>Matkoja {a?.trip_count||0} · Mestaruuksia {c?.all_wins||0}</span></section></article>})}</main>}
-function UploadPanel({trips,user,onUploaded}){const[trip,setTrip]=useState(trips[0]?.id||''),[files,setFiles]=useState([]),[progress,setProgress]=useState(''),[state,setState]=useState('idle');async function upload(){if(!trip||!files.length)return;setState('loading');let done=0;for(const f of files){const ext=f.name.split('.').pop()?.toLowerCase()||'jpg';const path=`${trips.find(t=>t.id===trip)?.slug}/${Date.now()}-${crypto.randomUUID()}.${ext}`;const{error:upErr}=await supabase.storage.from('trip-photos').upload(path,f,{contentType:f.type||undefined});if(upErr){setState('error');setProgress(upErr.message);return}const{error:dbErr}=await supabase.from('photos').insert({trip_id:trip,storage_path:path,original_filename:f.name,uploaded_by:user.id});if(dbErr){setState('error');setProgress(dbErr.message);return}done++;setProgress(`${done} / ${files.length}`)}setState('done');onUploaded()}return <section className="adminPanel"><h2><Camera/> Lisää kuvia</h2><label>Matka<select value={trip} onChange={e=>setTrip(e.target.value)}>{trips.map(t=><option value={t.id} key={t.id}>{t.name}</option>)}</select></label><label className="filePick"><Upload/>Valitse kuvat puhelimesta<input type="file" accept="image/*" multiple onChange={e=>setFiles([...e.target.files])}/></label>{files.length>0&&<p>{files.length} kuvaa valittu</p>}<button className="primaryBtn" onClick={upload} disabled={state==='loading'||!files.length}>{state==='loading'?<LoaderCircle className="spin"/>:<Upload/>}Lataa kuvat</button>{progress&&<p className={state==='error'?'error':'success'}>{state==='done'?<CheckCircle2/>:null}{progress}</p>}</section>}
-function Admin({trips,user,isAdmin,onRefresh,onLogout}){if(!user)return <main className="inner"><h1>Ylläpito</h1><p>Kirjaudu ensin sisään.</p></main>;if(!isAdmin)return <main className="inner"><h1>Ei käyttöoikeutta</h1><p>Kirjautunut käyttäjä ei ole ylläpitäjä.</p><button onClick={onLogout}>Kirjaudu ulos</button></main>;return <main className="inner"><h1>Ylläpito</h1><p className="muted">Kirjautuneena: {user.email}</p><UploadPanel trips={trips} user={user} onUploaded={onRefresh}/><button className="logoutBtn" onClick={onLogout}><LogOut/>Kirjaudu ulos</button></main>}
-function App(){const[page,setPage]=useState('Koti'),[menu,setMenu]=useState(false),[auth,setAuth]=useState(false),[user,setUser]=useState(null),[isAdmin,setAdmin]=useState(false),[loading,setLoading]=useState(true),[data,setData]=useState({trips:[],players:[],competitions:[],results:[],photos:[],history:[],participation:[],championship:[]});async function load(){if(!supabase){setLoading(false);return}setLoading(true);const[qTrips,qPlayers,qComp,qResults,qPhotos,qHistory,qPart,qChamp]=await Promise.all([supabase.from('trips').select('*').order('year',{ascending:false}),supabase.from('players').select('*').order('display_name'),supabase.from('competitions').select('*').order('priority'),supabase.from('competition_results').select('*,players(display_name)'),supabase.from('photos').select('*').order('captured_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}),supabase.from('trip_history').select('*').order('year',{ascending:false}),supabase.from('participation_ranking').select('*'),supabase.from('championship_ranking').select('*')]);const photos=(qPhotos.data||[]).map(x=>({...x,url:publicPhotoUrl(x.storage_path)}));setData({trips:qTrips.data||[],players:qPlayers.data||[],competitions:qComp.data||[],results:qResults.data||[],photos,history:qHistory.data||[],participation:qPart.data||[],championship:qChamp.data||[]});setLoading(false)}async function checkAdmin(u){if(!u){setAdmin(false);return}const{data:p}=await supabase.from('profiles').select('is_admin').eq('id',u.id).maybeSingle();setAdmin(Boolean(p?.is_admin))}useEffect(()=>{if(!supabaseConfigured){setLoading(false);return}supabase.auth.getSession().then(({data:{session}})=>{setUser(session?.user||null);checkAdmin(session?.user)});const{sub}=supabase.auth.onAuthStateChange((_e,s)=>{setUser(s?.user||null);checkAdmin(s?.user)}).data.subscription;load();return()=>sub.unsubscribe()},[]);async function logout(){await supabase.auth.signOut();setPage('Koti')}if(loading)return <div className="app"><Loading/></div>;const common={trips:data.trips,history:data.history,photos:data.photos};return <div className="app">{page==='Koti'?<HomePage {...common} setPage={setPage} openMenu={()=>setMenu(true)}/>:page==='Matkat'?<Trips {...common} competitions={data.competitions} results={data.results}/>:page==='Galleria'?<GalleryPage trips={data.trips} photos={data.photos} isAdmin={isAdmin} setPage={setPage}/>:page==='Historia'?<History history={data.history} participation={data.participation} championship={data.championship}/>:page==='Ylläpito'?<Admin trips={data.trips} user={user} isAdmin={isAdmin} onRefresh={load} onLogout={logout}/>:<Players players={data.players} participation={data.participation} championship={data.championship}/>}<Drawer open={menu} onClose={()=>setMenu(false)} setPage={setPage} user={user} isAdmin={isAdmin} onLogin={()=>setAuth(true)} onLogout={logout}/>{auth&&<AuthModal onClose={()=>setAuth(false)}/>}<nav>{nav.map(([n,I])=><button key={n} className={page===n?'active':''} onClick={()=>setPage(n)}><I/><span>{n}</span></button>)}</nav></div>}createRoot(document.getElementById('root')).render(<App/>);
+import React, { useEffect, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import {
+  Home,
+  Flag,
+  Trophy,
+  Users,
+  Images,
+  Menu,
+  LogOut,
+  LogIn,
+  Upload,
+  Trash2,
+  Edit3,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  X,
+} from "lucide-react";
+import { supabase, photoUrl } from "./supabase";
+import "./style.css";
+
+const nav = [
+  ["Koti", Home],
+  ["Matkat", Flag],
+  ["Historia", Trophy],
+  ["Pelaajat", Users],
+  ["Galleria", Images],
+];
+const fmt = (d) =>
+  d ? new Intl.DateTimeFormat("fi-FI").format(new Date(d + "T12:00")) : "";
+const slugify = (s) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/å|ä/g, "a")
+    .replace(/ö/g, "o")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+function Logo() {
+  return (
+    <div className="logo">
+      <div className="cross" />
+      <div className="core">
+        <small>SVERIGE GOLF TOUR</small>
+        <b>SGT</b>
+        <em>EST. 2026</em>
+      </div>
+    </div>
+  );
+}
+
+function Login({ close }) {
+  const [email, setEmail] = useState(""),
+    [sent, setSent] = useState(false);
+  async function send(e) {
+    e.preventDefault();
+    await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: location.origin },
+    });
+    setSent(true);
+  }
+  return (
+    <div className="modal">
+      <form onSubmit={send}>
+        <button type="button" className="x" onClick={close}>
+          <X />
+        </button>
+        <Logo />
+        <h2>Kirjaudu ylläpitoon</h2>
+        {sent ? (
+          <p>Taikalinkki lähetetty.</p>
+        ) : (
+          <>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Sähköposti"
+            />
+            <button className="gold">
+              <LogIn />
+              Lähetä taikalinkki
+            </button>
+          </>
+        )}
+      </form>
+    </div>
+  );
+}
+
+function Lightbox({ items, index, setIndex, close }) {
+  const sx = useRef(0);
+  return (
+    <div
+      className="lightbox"
+      onClick={close}
+      onTouchStart={(e) => (sx.current = e.touches[0].clientX)}
+      onTouchEnd={(e) => {
+        const d = e.changedTouches[0].clientX - sx.current;
+        if (d > 45) setIndex((index - 1 + items.length) % items.length);
+        if (d < -45) setIndex((index + 1) % items.length);
+      }}
+    >
+      <button className="close" onClick={close}>
+        <X />
+      </button>
+      <button
+        className="prev"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIndex((index - 1 + items.length) % items.length);
+        }}
+      >
+        <ChevronLeft />
+      </button>
+      <img onClick={(e) => e.stopPropagation()} src={items[index].url} />
+      <button
+        className="next"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIndex((index + 1) % items.length);
+        }}
+      >
+        <ChevronRight />
+      </button>
+      <span>
+        {index + 1} / {items.length}
+      </span>
+    </div>
+  );
+}
+
+function Gallery({ photos, admin = false, reload, trips }) {
+  const [index, setIndex] = useState(null),
+    [edit, setEdit] = useState(false),
+    [selected, setSelected] = useState([]);
+  const toggle = (id) =>
+    setSelected((s) =>
+      s.includes(id) ? s.filter((x) => x !== id) : [...s, id],
+    );
+  async function remove() {
+    if (!confirm(`Poistetaanko ${selected.length} kuvaa pysyvästi?`)) return;
+    const ps = photos.filter((p) => selected.includes(p.id));
+    await supabase.storage
+      .from("trip-photos")
+      .remove(ps.map((p) => p.storage_path));
+    await supabase.from("photos").delete().in("id", selected);
+    setSelected([]);
+    reload();
+  }
+  async function cover() {
+    const p = photos.find((x) => x.id === selected[0]);
+    await supabase
+      .from("trips")
+      .update({ cover_image_path: p.storage_path })
+      .eq("id", p.trip_id);
+    setSelected([]);
+    reload();
+  }
+  return (
+    <>
+      <div className="galleryBar">
+        <b>{photos.length} kuvaa</b>
+        {admin && (
+          <button
+            onClick={() => {
+              setEdit(!edit);
+              setSelected([]);
+            }}
+          >
+            <Edit3 />
+            {edit ? "Valmis" : "Muokkaa"}
+          </button>
+        )}
+      </div>
+      <div className="gallery">
+        {photos.map((p, n) => (
+          <button
+            key={p.id}
+            className={selected.includes(p.id) ? "selected" : ""}
+            onClick={() => (edit ? toggle(p.id) : setIndex(n))}
+          >
+            <img src={p.url} />
+            {edit && <i>{selected.includes(p.id) && <Check />}</i>}
+          </button>
+        ))}
+      </div>
+      {edit && selected.length > 0 && (
+        <div className="bulk">
+          <button onClick={remove}>
+            <Trash2 />
+            Poista {selected.length}
+          </button>
+          {selected.length === 1 && (
+            <button onClick={cover}>
+              <Flag />
+              Kansikuvaksi
+            </button>
+          )}
+        </div>
+      )}
+      {index !== null && (
+        <Lightbox
+          items={photos}
+          index={index}
+          setIndex={setIndex}
+          close={() => setIndex(null)}
+        />
+      )}
+    </>
+  );
+}
+
+function TripForm({ trip, players, done }) {
+  const empty = {
+    name: "",
+    year: new Date().getFullYear() + 1,
+    location: "",
+    start_date: "",
+    end_date: "",
+    summary: "",
+    story: "",
+    published: true,
+  };
+  const [form, setForm] = useState(trip || empty),
+    [parts, setParts] = useState([]);
+  useEffect(() => {
+    if (trip)
+      supabase
+        .from("trip_participants")
+        .select("player_id")
+        .eq("trip_id", trip.id)
+        .then(({ data }) => setParts((data || []).map((x) => x.player_id)));
+  }, [trip]);
+  async function save(e) {
+    e.preventDefault();
+    const payload = {
+      ...form,
+      slug: trip?.slug || `${slugify(form.name)}-${form.year}`,
+    };
+    delete payload.id;
+    delete payload.created_at;
+    const q = trip
+      ? await supabase
+          .from("trips")
+          .update(payload)
+          .eq("id", trip.id)
+          .select()
+          .single()
+      : await supabase.from("trips").insert(payload).select().single();
+    if (q.error) {
+      alert(q.error.message);
+      return;
+    }
+    await supabase.from("trip_participants").delete().eq("trip_id", q.data.id);
+    if (parts.length)
+      await supabase
+        .from("trip_participants")
+        .insert(parts.map((player_id) => ({ trip_id: q.data.id, player_id })));
+    done();
+  }
+  return (
+    <form className="form" onSubmit={save}>
+      <h2>{trip ? "Muokkaa matkaa" : "Lisää matka"}</h2>
+      <label>
+        Nimi
+        <input
+          required
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          placeholder="Bro Hof 2027"
+        />
+      </label>
+      <div className="cols">
+        <label>
+          Vuosi
+          <input
+            type="number"
+            value={form.year}
+            onChange={(e) => setForm({ ...form, year: +e.target.value })}
+          />
+        </label>
+        <label>
+          Sijainti
+          <input
+            value={form.location || ""}
+            onChange={(e) => setForm({ ...form, location: e.target.value })}
+          />
+        </label>
+      </div>
+      <div className="cols">
+        <label>
+          Alkupäivä
+          <input
+            type="date"
+            required
+            value={form.start_date || ""}
+            onChange={(e) => setForm({ ...form, start_date: e.target.value })}
+          />
+        </label>
+        <label>
+          Loppupäivä
+          <input
+            type="date"
+            required
+            value={form.end_date || ""}
+            onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+          />
+        </label>
+      </div>
+      <label>
+        Yhteenveto
+        <textarea
+          rows="3"
+          value={form.summary || ""}
+          onChange={(e) => setForm({ ...form, summary: e.target.value })}
+        />
+      </label>
+      <label>
+        Matkakertomus
+        <textarea
+          rows="8"
+          value={form.story || ""}
+          onChange={(e) => setForm({ ...form, story: e.target.value })}
+        />
+      </label>
+      <fieldset>
+        <legend>Osallistujat</legend>
+        {players.map((p) => (
+          <label className="check" key={p.id}>
+            <input
+              type="checkbox"
+              checked={parts.includes(p.id)}
+              onChange={() =>
+                setParts((s) =>
+                  s.includes(p.id) ? s.filter((x) => x !== p.id) : [...s, p.id],
+                )
+              }
+            />
+            {p.display_name}
+          </label>
+        ))}
+      </fieldset>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={form.published}
+          onChange={(e) => setForm({ ...form, published: e.target.checked })}
+        />
+        Julkaistu
+      </label>
+      <button className="gold">
+        <Check />
+        Tallenna
+      </button>
+    </form>
+  );
+}
+
+function UploadForm({ trips, user, reload }) {
+  const [tripId, setTripId] = useState(trips[0]?.id || ""),
+    [files, setFiles] = useState([]),
+    [msg, setMsg] = useState("");
+  async function upload() {
+    const trip = trips.find((t) => t.id === tripId);
+    let done = 0;
+    for (const f of files) {
+      const path = `${trip.slug}/${Date.now()}-${crypto.randomUUID()}.${f.name.split(".").pop()}`;
+      const u = await supabase.storage.from("trip-photos").upload(path, f);
+      if (!u.error) {
+        await supabase
+          .from("photos")
+          .insert({
+            trip_id: tripId,
+            storage_path: path,
+            original_filename: f.name,
+            uploaded_by: user.id,
+          });
+        done++;
+        setMsg(`${done}/${files.length}`);
+      }
+    }
+    setFiles([]);
+    reload();
+  }
+  return (
+    <section className="form">
+      <h2>Lisää kuvia</h2>
+      <select value={tripId} onChange={(e) => setTripId(e.target.value)}>
+        {trips.map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.name}
+          </option>
+        ))}
+      </select>
+      <label className="picker">
+        <Upload />
+        Valitse kuvat
+        <input
+          hidden
+          multiple
+          accept="image/*"
+          type="file"
+          onChange={(e) => setFiles([...e.target.files])}
+        />
+      </label>
+      {files.length > 0 && (
+        <button className="gold" onClick={upload}>
+          Lataa {files.length} kuvaa
+        </button>
+      )}
+      <p>{msg}</p>
+    </section>
+  );
+}
+
+function PlayerForm({ reload }) {
+  const [name, setName] = useState(""),
+    [nick, setNick] = useState("");
+  async function save(e) {
+    e.preventDefault();
+    const q = await supabase
+      .from("players")
+      .insert({ display_name: name, nickname: nick });
+    if (q.error) alert(q.error.message);
+    else {
+      setName("");
+      setNick("");
+      reload();
+    }
+  }
+  return (
+    <form className="form" onSubmit={save}>
+      <h2>Lisää pelaaja</h2>
+      <label>
+        Nimi
+        <input
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </label>
+      <label>
+        Lempinimi
+        <input value={nick} onChange={(e) => setNick(e.target.value)} />
+      </label>
+      <button className="gold">
+        <Plus />
+        Lisää
+      </button>
+    </form>
+  );
+}
+
+function Admin({ D, user, reload }) {
+  const [tab, setTab] = useState("Matkat"),
+    [editing, setEditing] = useState(null),
+    [photoTrip, setPhotoTrip] = useState("");
+  return (
+    <main>
+      <h1>Ylläpito</h1>
+      <div className="tabs">
+        {["Matkat", "Kuvat", "Pelaajat"].map((t) => (
+          <button
+            key={t}
+            className={tab === t ? "on" : ""}
+            onClick={() => setTab(t)}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+      {tab === "Matkat" && (
+        <>
+          <TripForm
+            key={editing?.id || "new"}
+            trip={editing}
+            players={D.players}
+            done={() => {
+              setEditing(null);
+              reload();
+            }}
+          />
+          {D.trips.map((t) => (
+            <div className="adminRow" key={t.id}>
+              <span>{t.name}</span>
+              <button onClick={() => setEditing(t)}>
+                <Edit3 />
+                Muokkaa
+              </button>
+            </div>
+          ))}
+        </>
+      )}
+      {tab === "Kuvat" && (
+        <>
+          <UploadForm trips={D.trips} user={user} reload={reload} />
+          <select
+            value={photoTrip}
+            onChange={(e) => setPhotoTrip(e.target.value)}
+          >
+            <option value="">Valitse matka kuvien hallintaan</option>
+            {D.trips.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+          {photoTrip && (
+            <Gallery
+              admin
+              photos={D.photos.filter((p) => p.trip_id === photoTrip)}
+              reload={reload}
+              trips={D.trips}
+            />
+          )}
+        </>
+      )}
+      {tab === "Pelaajat" && (
+        <>
+          <PlayerForm reload={reload} />
+          {D.players.map((p) => (
+            <div className="adminRow" key={p.id}>
+              <span>{p.display_name}</span>
+            </div>
+          ))}
+        </>
+      )}
+    </main>
+  );
+}
+
+function App() {
+  const [page, setPage] = useState("Koti"),
+    [login, setLogin] = useState(false),
+    [user, setUser] = useState(null),
+    [admin, setAdmin] = useState(false),
+    [trip, setTrip] = useState(null),
+    [D, setD] = useState({
+      trips: [],
+      players: [],
+      photos: [],
+      history: [],
+      champ: [],
+    });
+  async function load() {
+    const [a, b, c, d, e] = await Promise.all([
+      supabase.from("trips").select("*").order("year", { ascending: false }),
+      supabase.from("players").select("*").order("display_name"),
+      supabase
+        .from("photos")
+        .select("*")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("trip_history")
+        .select("*")
+        .order("year", { ascending: false }),
+      supabase.from("championship_ranking").select("*"),
+    ]);
+    setD({
+      trips: a.data || [],
+      players: b.data || [],
+      photos: (c.data || []).map((x) => ({
+        ...x,
+        url: photoUrl(x.storage_path),
+      })),
+      history: d.data || [],
+      champ: e.data || [],
+    });
+  }
+  useEffect(() => {
+    load();
+    supabase.auth
+      .getSession()
+      .then(({ data }) => setUser(data.session?.user || null));
+    const s = supabase.auth.onAuthStateChange((_e, s) =>
+      setUser(s?.user || null),
+    ).data.subscription;
+    return () => s.unsubscribe();
+  }, []);
+  useEffect(() => {
+    if (user)
+      supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => setAdmin(!!data?.is_admin));
+    else setAdmin(false);
+  }, [user]);
+  const latest = D.trips[0],
+    h = D.history[0];
+  return (
+    <div className="app">
+      <header>
+        <button onClick={() => setPage("Koti")}>
+          <Logo />
+        </button>
+        <button
+          onClick={() => (user ? supabase.auth.signOut() : setLogin(true))}
+        >
+          {user ? <LogOut /> : <Menu />}
+        </button>
+      </header>
+      {page === "Koti" && (
+        <main className="home">
+          <h1>SVERIGE GOLF TOUR</h1>
+          <p>Golfia, kilpailua ja yhteisiä matkoja Ruotsissa</p>
+          {latest && (
+            <article>
+              <small>VIIMEISIN MATKA</small>
+              <h2>{latest.name}</h2>
+              <p>
+                {latest.location}
+                <br />
+                {fmt(latest.start_date)}–{fmt(latest.end_date)}
+              </p>
+              <button
+                className="gold"
+                onClick={() => {
+                  setTrip(latest);
+                  setPage("Matka");
+                }}
+              >
+                Avaa matka
+              </button>
+            </article>
+          )}
+          <div className="champs">
+            <div>
+              <Trophy />
+              <small>TOUR CHAMPION</small>
+              <b>{h?.tour_champion || "–"}</b>
+            </div>
+            <div>
+              <Trophy />
+              <small>SCRATCH CHAMPION</small>
+              <b>{h?.scratch_champion || "–"}</b>
+            </div>
+          </div>
+        </main>
+      )}
+      {page === "Matkat" && (
+        <main>
+          <h1>Matkat</h1>
+          {D.trips.map((t) => (
+            <article
+              key={t.id}
+              className="trip"
+              onClick={() => {
+                setTrip(t);
+                setPage("Matka");
+              }}
+            >
+              {t.cover_image_path ? (
+                <img src={photoUrl(t.cover_image_path)} />
+              ) : (
+                <Flag />
+              )}
+              <div>
+                <b>{t.name}</b>
+                <span>
+                  {fmt(t.start_date)}–{fmt(t.end_date)}
+                </span>
+              </div>
+              <ChevronRight />
+            </article>
+          ))}
+        </main>
+      )}
+      {page === "Matka" && trip && (
+        <main>
+          <button className="back" onClick={() => setPage("Matkat")}>
+            <ChevronLeft />
+            Matkat
+          </button>
+          <h1>{trip.name}</h1>
+          {trip.cover_image_path && (
+            <img className="cover" src={photoUrl(trip.cover_image_path)} />
+          )}
+          <p>{trip.summary}</p>
+          <h2>Matkakertomus</h2>
+          <p className="story">{trip.story}</p>
+          <h2>Kuvat</h2>
+          <Gallery photos={D.photos.filter((p) => p.trip_id === trip.id)} />
+        </main>
+      )}
+      {page === "Historia" && (
+        <main>
+          <h1>Historia</h1>
+          {D.history.map((x) => (
+            <div className="history" key={x.id}>
+              <b>{x.name}</b>
+              <span>
+                {fmt(x.start_date)}–{fmt(x.end_date)}
+              </span>
+              <small>
+                {x.participant_count} osallistujaa
+                <br />
+                Tour: {x.tour_champion}
+                <br />
+                Scratch: {x.scratch_champion}
+              </small>
+            </div>
+          ))}
+          <h2>Mestaruusranking</h2>
+          {D.champ.map((x, i) => (
+            <div className="rank" key={x.id}>
+              <b>{i + 1}.</b>
+              <span>{x.display_name}</span>
+              <strong>{x.all_wins}</strong>
+            </div>
+          ))}
+        </main>
+      )}
+      {page === "Pelaajat" && (
+        <main>
+          <h1>Pelaajat</h1>
+          {D.players.map((x) => (
+            <div className="player" key={x.id}>
+              <i>
+                {x.display_name
+                  .split(" ")
+                  .map((s) => s[0])
+                  .join("")}
+              </i>
+              <b>{x.display_name}</b>
+            </div>
+          ))}
+        </main>
+      )}
+      {page === "Galleria" && (
+        <main>
+          <h1>Galleria</h1>
+          <Gallery photos={D.photos} />
+        </main>
+      )}
+      {page === "Admin" && admin && <Admin D={D} user={user} reload={load} />}
+      <nav>
+        {nav.map(([n, I]) => (
+          <button
+            key={n}
+            className={page === n ? "on" : ""}
+            onClick={() => setPage(n)}
+          >
+            <I />
+            <span>{n}</span>
+          </button>
+        ))}
+      </nav>
+      {admin && (
+        <button className="adminFab" onClick={() => setPage("Admin")}>
+          <Edit3 />
+        </button>
+      )}
+      {login && <Login close={() => setLogin(false)} />}
+    </div>
+  );
+}
+createRoot(document.getElementById("root")).render(<App />);
